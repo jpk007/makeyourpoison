@@ -307,8 +307,9 @@ sed -i 's|^root:[^:]*:|root::|' "${ROOTFS}/etc/shadow"
 cat > "${ROOTFS}/etc/inittab" <<'EOF'
 # MakeYourPoison live system
 ::sysinit:/etc/rc
-tty0::respawn:/sbin/getty -n -l /bin/ash -L tty0 115200 linux
-tty1::respawn:/sbin/getty -n -l /bin/ash -L tty1 115200 linux
+# Open tty0/tty1 directly — bypasses getty tty ownership issues
+tty0::respawn:/bin/sh -c 'exec /bin/ash -l </dev/tty0 >/dev/tty0 2>&1'
+tty1::respawn:/bin/sh -c 'exec /bin/ash -l </dev/tty1 >/dev/tty1 2>&1'
 ::ctrlaltdel:/sbin/reboot
 ::shutdown:/bin/umount -a -r
 EOF
