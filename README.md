@@ -1,6 +1,8 @@
 # MakeYourPoison
 
-Build your own Linux ISO from the browser. Pick a desktop environment, packages, kernel, locale settings, and boot options — then download a fully bootable ISO built from scratch using a Linux kernel compiled from [kernel.org](https://kernel.org) source.
+> **Work in progress** — MakeYourPoison is currently in active development. Expect rough edges, missing features, and breaking changes.
+
+Build your own Linux ISO from the browser. Pick a desktop environment, packages, kernel, and locale settings, then download a fully bootable ISO assembled from the Linux kernel compiled from [kernel.org](https://kernel.org) source. No distro base. No shortcuts.
 
 ## Features
 
