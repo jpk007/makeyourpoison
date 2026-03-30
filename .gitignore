@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+*.db
+*.db-shm
+*.db-wal
+token.txt
+*.iso
+*.iso.sha256
+backend/dist/
+frontend/dist/

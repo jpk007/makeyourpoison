@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MakeYourPoison — Build Your Own Linux ISO</title>
+  <meta name="description" content="Design and build your own Linux ISO from the browser. Pick a desktop, packages, kernel, and download a bootable ISO built from the Linux kernel source." />
+  <meta property="og:title" content="MakeYourPoison" />
+  <meta property="og:description" content="Build your own Linux ISO from the browser." />
+  <meta property="og:type" content="website" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0f;
+      --bg2:      #0f0f1a;
+      --bg3:      #13131f;
+      --border:   #1e1e30;
+      --green:    #00ff88;
+      --green2:   #00cc6a;
+      --purple:   #7c3aed;
+      --purple2:  #6d28d9;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --card:     #111120;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: -0.02em;
+      text-decoration: none;
+      font-family: 'Courier New', monospace;
+    }
+    .nav-logo span { color: var(--muted); }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--green);
+      color: #000;
+      padding: 0.45rem 1.1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .nav-cta:hover { background: var(--green2); transform: translateY(-1px); }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124,58,237,0.25) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0,255,136,0.08) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(0,255,136,0.08);
+      border: 1px solid rgba(0,255,136,0.2);
+      color: var(--green);
+      padding: 0.3rem 0.9rem;
+      border-radius: 100px;
+      font-size: 0.78rem;
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-bottom: 2rem;
+    }
+    .hero-badge::before { content: '●'; font-size: 0.6rem; animation: pulse 2s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    h1 {
+      font-size: clamp(3rem, 8vw, 6rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      margin-bottom: 1.5rem;
+    }
+    h1 .accent { color: var(--green); }
+    h1 .dim { color: var(--muted); }
+    .hero-sub {
+      font-size: clamp(1rem, 2.5vw, 1.3rem);
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto 2.5rem;
+    }
+    .hero-sub strong { color: var(--text); }
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 4rem;
+    }
+    .btn-primary {
+      background: var(--green);
+      color: #000;
+      padding: 0.85rem 2rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 0 30px rgba(0,255,136,0.2);
+    }
+    .btn-primary:hover {
+      background: var(--green2);
+      transform: translateY(-2px);
+      box-shadow: 0 0 40px rgba(0,255,136,0.35);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      padding: 0.85rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--muted); transform: translateY(-2px); }
+
+    /* ── Terminal mockup ── */
+    .terminal {
+      width: 100%;
+      max-width: 700px;
+      background: #0d0d18;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 60px rgba(0,255,136,0.05);
+      text-align: left;
+      font-family: 'Courier New', monospace;
+      font-size: 0.82rem;
+    }
+    .terminal-bar {
+      background: #161625;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+    .terminal-title {
+      margin-left: auto;
+      margin-right: auto;
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+    .terminal-body { padding: 1.25rem 1.5rem; line-height: 1.8; }
+    .t-dim    { color: #4a5568; }
+    .t-green  { color: var(--green); }
+    .t-purple { color: #a78bfa; }
+    .t-white  { color: #e2e8f0; }
+    .t-yellow { color: #fbbf24; }
+    .t-cursor {
+      display: inline-block;
+      width: 8px; height: 1em;
+      background: var(--green);
+      vertical-align: text-bottom;
+      animation: blink 1.2s step-end infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* ── Sections ── */
+    section { padding: 6rem 2rem; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-family: 'Courier New', monospace;
+      color: var(--green);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+    .section-sub {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 540px;
+    }
+
+    /* ── Steps ── */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3.5rem;
+    }
+    .step-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      position: relative;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .step-card:hover { border-color: rgba(0,255,136,0.25); transform: translateY(-3px); }
+    .step-num {
+      font-family: 'Courier New', monospace;
+      font-size: 0.72rem;
+      color: var(--green);
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      opacity: 0.7;
+    }
+    .step-icon { font-size: 1.6rem; margin-bottom: 0.75rem; }
+    .step-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .step-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+    /* ── How it works ── */
+    .how-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      margin-top: 3rem;
+    }
+    .pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .pipe-step {
+      display: flex;
+      gap: 1.25rem;
+      align-items: flex-start;
+      padding: 1.25rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .pipe-step:last-child { border-bottom: none; }
+    .pipe-num {
+      flex-shrink: 0;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: rgba(0,255,136,0.08);
+      border: 1px solid rgba(0,255,136,0.2);
+      color: var(--green);
+      font-family: 'Courier New', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pipe-text h4 { font-size: 0.92rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .pipe-text p { font-size: 0.82rem; color: var(--muted); }
+    .pipe-text code {
+      font-family: 'Courier New', monospace;
+      font-size: 0.78rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      color: var(--green);
+    }
+
+    /* ── Stack ── */
+    .stack-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-top: 3rem;
+    }
+    .stack-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .stack-card .layer {
+      font-family: 'Courier New', monospace;
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .stack-card .tech {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .stack-card .tech span { color: var(--muted); font-weight: 400; font-size: 0.8rem; }
+
+    /* ── Milestone ── */
+    .milestone-section { background: var(--bg2); }
+    .milestone-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      margin-top: 3rem;
+    }
+    .milestone-img-wrap {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(0,255,136,0.06);
+    }
+    .milestone-img-wrap img {
+      width: 100%;
+      display: block;
+    }
+    .milestone-img-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      box-shadow: inset 0 0 0 1px rgba(0,255,136,0.1);
+      pointer-events: none;
+    }
+    .milestone-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(0,255,136,0.08);
+      border: 1px solid rgba(0,255,136,0.2);
+      color: var(--green);
+      padding: 0.3rem 0.9rem;
+      border-radius: 100px;
+      font-size: 0.78rem;
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+    }
+    .milestone-list {
+      list-style: none;
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .milestone-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    .milestone-list li::before {
+      content: '✓';
+      color: var(--green);
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .milestone-list li strong { color: var(--text); }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+    .footer-logo {
+      font-family: 'Courier New', monospace;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--green);
+      margin-bottom: 0.75rem;
+    }
+    footer p { font-size: 0.85rem; color: var(--muted); }
+    footer a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    footer a:hover { color: var(--green); }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .how-wrap, .milestone-wrap { grid-template-columns: 1fr; gap: 2.5rem; }
+      .milestone-img-wrap { order: -1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <a href="#" class="nav-logo">make<span>your</span>poison</a>
+  <ul class="nav-links">
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#stack">Stack</a></li>
+    <li><a href="#milestone">Milestones</a></li>
+  </ul>
+  <a href="https://github.com/jpk007/makeyourpoison" class="nav-cta" target="_blank" rel="noopener">
+    View on GitHub
+  </a>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">Milestone 1 achieved — first live boot</div>
+  <h1>
+    Build your own<br/>
+    <span class="accent">Linux ISO</span><br/>
+    <span class="dim">from the browser.</span>
+  </h1>
+  <p class="hero-sub">
+    Pick a desktop, packages, kernel, and locale.
+    Get a <strong>bootable ISO</strong> built from the
+    <strong>Linux kernel source</strong> — no distro base, no shortcuts.
+  </p>
+  <div class="hero-actions">
+    <a href="https://github.com/jpk007/makeyourpoison" class="btn-primary" target="_blank" rel="noopener">
+      Get Started →
+    </a>
+    <a href="#milestone" class="btn-secondary">See it boot</a>
+  </div>
+
+  <!-- Terminal -->
+  <div class="terminal">
+    <div class="terminal-bar">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+      <span class="terminal-title">makeyourpoison-builder — live boot</span>
+    </div>
+    <div class="terminal-body">
+      <div><span class="t-dim">[INFO]</span>  <span class="t-white">Kernel: /opt/kernels/vmlinuz</span></div>
+      <div><span class="t-dim">[INFO]</span>  <span class="t-white">Bootstrapping Alpine package manager</span></div>
+      <div><span class="t-green">✓</span>  <span class="t-white">Alpine base bootstrapped</span></div>
+      <div><span class="t-green">✓</span>  <span class="t-white">GNOME desktop installed</span></div>
+      <div><span class="t-green">✓</span>  <span class="t-white">initramfs packed (squashfs + overlayfs)</span></div>
+      <div><span class="t-green">✓</span>  <span class="t-white">GRUB configured (BIOS + UEFI)</span></div>
+      <div class="t-dim">──────────────────────────────────</div>
+      <div><span class="t-purple">MYP:</span> <span class="t-white">found squashfs on /dev/sr0</span></div>
+      <div><span class="t-purple">MYP:</span> <span class="t-white">overlayfs ready, switching root...</span></div>
+      <div><span class="t-purple">MYP:</span> <span class="t-white">switch_root → /sbin/init</span></div>
+      <div class="t-dim">──────────────────────────────────</div>
+      <div><span class="t-yellow">Welcome to MakeYourPoison Live!</span></div>
+      <div><span class="t-white">Logged in as root.</span></div>
+      <div><span class="t-green">~ #</span> <span class="t-cursor"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Wizard Steps -->
+<section id="steps">
+  <div class="container">
+    <div class="section-label">// wizard</div>
+    <h2 class="section-title">8 steps to your ISO</h2>
+    <p class="section-sub">Configure every layer of your system through a guided wizard — no command line required.</p>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">STEP 01</div>
+        <div class="step-icon">🖥️</div>
+        <h3>Desktop</h3>
+        <p>GNOME, KDE Plasma, XFCE, Hyprland, or minimal console.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 02</div>
+        <div class="step-icon">📦</div>
+        <h3>Packages</h3>
+        <p>Search and select from a catalog of Alpine-compatible packages.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 03</div>
+        <div class="step-icon">🎁</div>
+        <h3>App Bundles</h3>
+        <p>Pre-built bundles: Dev, Office, Gaming, or Minimal.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 04</div>
+        <div class="step-icon">⚙️</div>
+        <h3>Kernel</h3>
+        <p>Choose generic, lowlatency, zen, or hardened kernel flavour.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 05</div>
+        <div class="step-icon">🌍</div>
+        <h3>Locale</h3>
+        <p>Set timezone, language, and keyboard layout.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 06</div>
+        <div class="step-icon">🥾</div>
+        <h3>Boot</h3>
+        <p>GRUB theme, splash screen toggle, and boot timeout.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 07</div>
+        <div class="step-icon">🔍</div>
+        <h3>Review</h3>
+        <p>Summary of your build with estimated ISO size and custom filename.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 08</div>
+        <div class="step-icon">🚀</div>
+        <h3>Build</h3>
+        <p>Trigger the job, watch live logs stream in, then download your ISO.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section id="how" style="background: var(--bg2);">
+  <div class="container">
+    <div class="how-wrap">
+      <div>
+        <div class="section-label">// architecture</div>
+        <h2 class="section-title">How it works</h2>
+        <p class="section-sub">Every ISO is built entirely from scratch inside an isolated Docker container.</p>
+        <div class="pipeline" style="margin-top: 2rem;">
+          <div class="pipe-step">
+            <div class="pipe-num">1</div>
+            <div class="pipe-text">
+              <h4>Config saved</h4>
+              <p>Frontend POSTs your config → PostgreSQL → returns a <code>configId</code>.</p>
+            </div>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-num">2</div>
+            <div class="pipe-text">
+              <h4>Job queued</h4>
+              <p>Build job added to Bull/Redis queue with a UUID job ID. Max 2 concurrent builds.</p>
+            </div>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-num">3</div>
+            <div class="pipe-text">
+              <h4>Docker container spins up</h4>
+              <p>Uses pre-compiled <code>vmlinuz</code> (Linux 6.6.22 from source) and busybox.</p>
+            </div>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-num">4</div>
+            <div class="pipe-text">
+              <h4>Rootfs assembled</h4>
+              <p>Alpine apk bootstrapped, desktop + packages installed, initramfs built with live-boot support.</p>
+            </div>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-num">5</div>
+            <div class="pipe-text">
+              <h4>ISO ready</h4>
+              <p>xorriso assembles a dual BIOS+UEFI bootable ISO. Logs stream live via WebSocket.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="terminal" style="margin: 0;">
+          <div class="terminal-bar">
+            <div class="dot dot-r"></div>
+            <div class="dot dot-y"></div>
+            <div class="dot dot-g"></div>
+            <span class="terminal-title">build progress</span>
+          </div>
+          <div class="terminal-body">
+            <div><span class="t-dim">PROGRESS:2:Checking pre-compiled artifacts</span></div>
+            <div><span class="t-dim">PROGRESS:5:Creating rootfs structure</span></div>
+            <div><span class="t-dim">PROGRESS:15:Bootstrapping Alpine apk</span></div>
+            <div><span class="t-green">PROGRESS:30:Installing GNOME desktop</span></div>
+            <div><span class="t-dim">(1/312) Installing musl (1.2.4-r5)</span></div>
+            <div><span class="t-dim">(2/312) Installing busybox (1.36.1-r21)</span></div>
+            <div><span class="t-dim">...</span></div>
+            <div><span class="t-green">PROGRESS:55:Building initramfs</span></div>
+            <div><span class="t-dim">[INFO]  initramfs size: 1.1M</span></div>
+            <div><span class="t-green">PROGRESS:65:Creating squashfs filesystem</span></div>
+            <div><span class="t-dim">Filesystem size 563.35 Kbytes</span></div>
+            <div><span class="t-green">PROGRESS:92:Assembling ISO with xorriso</span></div>
+            <div><span class="t-dim">ISO image produced: 10596 sectors</span></div>
+            <div><span class="t-yellow">PROGRESS:100:ISO build complete (21M)</span></div>
+            <div><span class="t-green">~ #</span> <span class="t-cursor"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stack -->
+<section id="stack">
+  <div class="container">
+    <div class="section-label">// tech stack</div>
+    <h2 class="section-title">Built with</h2>
+    <p class="section-sub">A modern full-stack app with a Docker-based ISO build pipeline.</p>
+    <div class="stack-grid">
+      <div class="stack-card">
+        <div class="layer">Frontend</div>
+        <div class="tech">Vue 3 <span>+ Pinia + Vite</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Styling</div>
+        <div class="tech">Tailwind CSS <span>+ PWA</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Backend</div>
+        <div class="tech">Express 5 <span>+ TypeScript</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Validation</div>
+        <div class="tech">Zod <span>shared schemas</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Queue</div>
+        <div class="tech">Bull <span>+ Redis</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Database</div>
+        <div class="tech">PostgreSQL <span>/ SQLite</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Realtime</div>
+        <div class="tech">WebSocket <span>build logs</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Build Worker</div>
+        <div class="tech">Docker <span>multi-stage</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Kernel</div>
+        <div class="tech">Linux 6.6.22 <span>from source</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Packages</div>
+        <div class="tech">Alpine apk <span>3.19</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="layer">Bootloader</div>
+        <div class="tech">GRUB <span>BIOS + UEFI</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="layer">ISO</div>
+        <div class="tech">xorriso <span>+ squashfs</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Milestone -->
+<section id="milestone" class="milestone-section">
+  <div class="container">
+    <div class="milestone-wrap">
+      <div class="milestone-img-wrap">
+        <img
+          src="https://raw.githubusercontent.com/jpk007/makeyourpoison/main/success/Screenshot%202026-03-29%20224810.png"
+          alt="First successful live boot in Hyper-V — MakeYourPoison live system running"
+          loading="lazy"
+        />
+      </div>
+      <div>
+        <div class="milestone-badge">🏁 Milestone 1 — 29 March 2026</div>
+        <h2 class="section-title">First live boot</h2>
+        <p class="section-sub" style="max-width: 100%;">
+          The first ISO built entirely from scratch booted successfully inside
+          Hyper-V on Windows 11. Full boot chain confirmed working end-to-end.
+        </p>
+        <ul class="milestone-list">
+          <li><strong>Linux 6.6.22</strong> kernel compiled from kernel.org source</li>
+          <li><strong>Hyper-V drivers</strong> loaded from initramfs (hv_vmbus → hv_storvsc)</li>
+          <li><strong>squashfs</strong> found and mounted from /dev/sr0</li>
+          <li><strong>overlayfs</strong> — read-only squashfs + writable tmpfs layer</li>
+          <li><strong>switch_root</strong> into live Alpine userspace</li>
+          <li>Full filesystem tree confirmed: bin dev home lib proc root sys usr var</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">makeyourpoison</div>
+  <p>Build your own Linux ISO from the browser.</p>
+  <div class="footer-links">
+    <a href="https://github.com/jpk007/makeyourpoison" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/jpk007/makeyourpoison/blob/main/README.md" target="_blank" rel="noopener">Docs</a>
+    <a href="https://github.com/jpk007/makeyourpoison/issues" target="_blank" rel="noopener">Issues</a>
+  </div>
+  <p style="margin-top: 1.5rem; font-size: 0.78rem;">MIT License</p>
+</footer>
+
+</body>
+</html>

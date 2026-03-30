@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "outDir": "./dist",
+    "sourceMap": true,
+    "declaration": true,
+    "skipLibCheck": true,
+    "typeRoots": ["./node_modules/@types"],
+    "types": ["node"],
+    "paths": {
+      "@distroforge/shared": ["../shared/types/distro.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
