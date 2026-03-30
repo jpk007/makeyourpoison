@@ -2,7 +2,10 @@
 
 > **Work in progress** — MakeYourPoison is currently in active development. Expect rough edges, missing features, and breaking changes.
 
-> *"I don't know if this will work. I don't know if anyone will ever use it. But I built it anyway — because not trying would've hurt more than failing."*
+---
+> ### *"I don't know if this will work. I don't know if anyone will ever use it.*
+> ### *But I built it anyway — because not trying would've hurt more than failing."*
+---
 
 Build your own Linux ISO from the browser. Pick a desktop environment, packages, kernel, and locale settings, then download a fully bootable ISO assembled from the Linux kernel compiled from [kernel.org](https://kernel.org) source. No distro base. No shortcuts.
 
