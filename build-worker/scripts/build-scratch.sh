@@ -64,7 +64,7 @@ cp "${BUSYBOX_BIN}" "${ROOTFS}/bin/busybox"
 chmod +x "${ROOTFS}/bin/busybox"
 
 # Create busybox applet symlinks
-for applet in sh ash bash ls cp mv rm mkdir rmdir cat echo printf \
+for applet in sh ash bash ls cp mv rm mkdir rmdir cat echo printf setsid \
     grep sed awk find sort uniq wc head tail cut tr \
     mount umount chroot pivot_root switch_root \
     mdev modprobe insmod depmod \
@@ -309,8 +309,8 @@ cat > "${ROOTFS}/etc/inittab" <<'EOF'
 ::sysinit:/etc/rc
 # getty sets the controlling terminal properly (baud_rate THEN device name)
 # -n = skip login prompt, -l = exec ash directly, linux = TERM type
-tty0::respawn:/sbin/getty -n -l /bin/ash 115200 tty0 linux
-tty1::respawn:/sbin/getty -n -l /bin/ash 115200 tty1 linux
+tty0::respawn:/bin/setsid /bin/ash -l </dev/tty0 >/dev/tty0 2>&1
+tty1::respawn:/bin/setsid /bin/ash -l </dev/tty1 >/dev/tty1 2>&1
 ::ctrlaltdel:/sbin/reboot
 ::shutdown:/bin/umount -a -r
 EOF
@@ -387,7 +387,7 @@ cat > "${INITRAMFS_DIR}/init" <<'INITSCRIPT'
 # Mounts squashfs from ISO, sets up overlayfs, pivots root
 # NOTE: no set -e — initramfs must never exit unexpectedly
 
-msg() { echo "MYP: $*" > /dev/console 2>/dev/null; echo "MYP: $*"; }
+msg() { echo "MYP: $*" > /dev/console 2>/dev/null; }
 
 rescue_shell() {
     msg "RESCUE: $1"
