@@ -125,4 +125,8 @@ Boot sequence confirmed working end-to-end:
 
 ## License
 
-MIT
+MIT License — Copyright © 2026 Jayesh Jayaprakash
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies, subject to the MIT license terms.
+
+See the full [LICENSE](./LICENSE) file for details.
