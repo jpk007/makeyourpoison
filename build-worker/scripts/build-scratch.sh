@@ -307,9 +307,10 @@ sed -i 's|^root:[^:]*:|root::|' "${ROOTFS}/etc/shadow"
 cat > "${ROOTFS}/etc/inittab" <<'EOF'
 # MakeYourPoison live system
 ::sysinit:/etc/rc
-# Open tty0/tty1 directly — bypasses getty tty ownership issues
-tty0::respawn:/bin/sh -c 'exec /bin/ash -l </dev/tty0 >/dev/tty0 2>&1'
-tty1::respawn:/bin/sh -c 'exec /bin/ash -l </dev/tty1 >/dev/tty1 2>&1'
+# getty sets the controlling terminal properly (baud_rate THEN device name)
+# -n = skip login prompt, -l = exec ash directly, linux = TERM type
+tty0::respawn:/sbin/getty -n -l /bin/ash 115200 tty0 linux
+tty1::respawn:/sbin/getty -n -l /bin/ash 115200 tty1 linux
 ::ctrlaltdel:/sbin/reboot
 ::shutdown:/bin/umount -a -r
 EOF
@@ -322,10 +323,6 @@ mount -t sysfs    none /sys  2>/dev/null || true
 mount -t devtmpfs none /dev  2>/dev/null || true
 mount -t tmpfs    none /tmp  2>/dev/null || true
 hostname makeyourpoison
-echo ""
-echo "  Welcome to MakeYourPoison Live!"
-echo "  Logged in as root."
-echo ""
 EOF
 chmod +x "${ROOTFS}/etc/rc"
 
