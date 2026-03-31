@@ -307,8 +307,9 @@ sed -i 's|^root:[^:]*:|root::|' "${ROOTFS}/etc/shadow"
 cat > "${ROOTFS}/etc/inittab" <<'EOF'
 # MakeYourPoison live system
 ::sysinit:/etc/rc
-tty0::respawn:/sbin/getty -n -l /bin/sh -L tty0 115200 vt100
-tty1::respawn:/sbin/getty -n -l /bin/sh -L tty1 115200 vt100
+# Open tty0/tty1 directly — bypasses getty tty ownership issues
+tty0::respawn:/bin/sh -c 'exec /bin/ash -l </dev/tty0 >/dev/tty0 2>&1'
+tty1::respawn:/bin/sh -c 'exec /bin/ash -l </dev/tty1 >/dev/tty1 2>&1'
 ::ctrlaltdel:/sbin/reboot
 ::shutdown:/bin/umount -a -r
 EOF
@@ -338,9 +339,15 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 export HOME=/root
 export TERM=linux
 export LANG=${LANG_LOCALE}
-echo "Welcome to MakeYourPoison Live!"
-echo "Type 'startx' to start the desktop, or use the console."
+export PS1='[\u@makeyourpoison \W]\$ '
+echo ""
+echo "  Welcome to MakeYourPoison Live!"
+echo "  Type 'startx' to start the desktop, or use the console."
+echo ""
 EOF
+
+# Also write /root/.profile so ash picks it up on auto-login
+cp "${ROOTFS}/etc/profile" "${ROOTFS}/root/.profile"
 
 # ── Step 5: Build initramfs (live-boot init) ──────────────────────────────────
 progress 55 "Building initramfs with live-boot support"
